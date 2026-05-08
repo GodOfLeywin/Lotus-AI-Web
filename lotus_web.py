@@ -11,96 +11,131 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Sayfa Yapılandırması
 st.set_page_config(page_title="Lotus AI 2026", page_icon="💜", layout="wide")
 
-# --- 🎨 TÜM ÖZELLİKLERİ KAPSAYAN TASARIM (CSS) ---
+# --- 📱 GELİŞMİŞ MOBİL & OKUNABİLİRLİK TASARIMI (CSS) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #000000; color: white; }
-    [data-testid="stSidebar"] { background-color: #120024; border-right: 1px solid #BF00FF; }
-    .stChatMessage { border-radius: 15px; border: 1px solid #2A004D; margin-bottom: 10px; }
-    .stChatInputContainer { background-color: #120024; border-top: 1px solid #BF00FF; }
-    .stFileUploader { background-color: #120024; border-radius: 10px; border: 1px dashed #BF00FF; padding: 5px; }
-    h1 { color: #BF00FF !important; font-family: 'Segoe UI', sans-serif; font-weight: bold; font-size: clamp(1.5rem, 5vw, 2.5rem) !important; }
-    .arda-imza { color: #FF0000; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; text-align: center; margin-top: 20px; }
+    /* Ana Arka Plan ve Yazı Rengi */
+    .stApp { 
+        background-color: #000000; 
+        color: #E0E0E0; 
+    }
+    
+    /* Başlık Fontu - Mobilde Dinamik Boyut */
+    h1 { 
+        color: #BF00FF !important; 
+        font-family: 'Segoe UI', sans-serif; 
+        font-weight: 800;
+        font-size: clamp(1.2rem, 6vw, 2.5rem) !important;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Mesaj Balonları ve Okunabilirlik */
+    .stChatMessage { 
+        border-radius: 15px; 
+        border: 1px solid #3D007A; 
+        background-color: #0A001A;
+        margin-bottom: 8px;
+        padding: 10px;
+        font-size: 15px !important;
+        line-height: 1.4;
+    }
+
+    /* Yan Panel Mobilde Daha Temiz */
+    [data-testid="stSidebar"] { 
+        background-color: #05000A; 
+        border-right: 2px solid #BF00FF;
+    }
+
+    /* Giriş Kutusu - Mobilde Sabit ve Belirgin */
+    .stChatInputContainer { 
+        background-color: #000000; 
+        border-top: 1px solid #BF00FF;
+        padding-bottom: 20px;
+    }
+
+    /* Bilgi Kutusu (Info) */
+    .stAlert {
+        background-color: #120024;
+        color: #BF00FF;
+        border: 1px solid #BF00FF;
+        font-size: 13px;
+    }
+
+    /* Görünmeyen Yazılar İçin Fix */
+    p, span, label {
+        color: #F0F0F0 !important;
+    }
+    
+    .arda-imza { 
+        color: #FF3131; 
+        font-weight: bold; 
+        font-size: 11px; 
+        text-align: center;
+        letter-spacing: 1px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 📱 YAN PANEL (SIDEBAR) ---
+# --- 📱 YAN PANEL ---
 with st.sidebar:
     st.markdown("<h1>LOTUS</h1>", unsafe_allow_html=True)
-    
     if os.path.exists("lotus.ico"):
         try:
-            img = Image.open("lotus.ico")
-            st.image(img, width=80)
+            st.image(Image.open("lotus.ico"), width=70)
         except: pass
     
     st.markdown("---")
-    
-    # Dosya Analiz Ünitesi (EXE'den gelen özellik)
-    st.subheader("📂 Dosya Analizi")
-    uploaded_file = st.file_uploader("Belge yükle", type=['txt', 'py', 'pdf', 'html', 'docx'])
-    
-    # Hafıza Kontrolü
-    if st.button("🧠 Hafızayı Sıfırla"):
+    st.subheader("⚙️ Araçlar")
+    if st.button("🗑️ Sohbeti Temizle"):
         st.session_state.messages = []
         st.rerun()
 
-    st.markdown("---")
-    st.success("SİSTEM: AKTİF")
-    st.write("Sürüm: v1.7 (Full Pack)")
+    uploaded_file = st.file_uploader("Dosya Analizi", type=['txt', 'pdf', 'py'])
     
+    st.markdown("---")
     st.markdown('<p class="arda-imza">© 2026 LOTUS DEVELOPER<br>ARDA GÜNDÜZHEV</p>', unsafe_allow_html=True)
 
-# --- 💬 ANA SOHBET MOTORU ---
-st.title("💜 Lotus AI Arayüzü")
-st.info("Güvenli Bağlantı. Arda Gündüzhev tarafından özel olarak geliştirilen Lotus yayında.")
+# --- 💬 SOHBET ALANI ---
+st.title("💜 Lotus AI")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Dosya İçeriğini Oku
-file_content = ""
-if uploaded_file is not None:
+# Dosya İşleme
+file_text = ""
+if uploaded_file:
     try:
-        file_content = uploaded_file.read().decode("utf-8")
-        st.success(f"Dosya başarıyla analiz edildi: {uploaded_file.name}")
+        file_text = uploaded_file.read().decode("utf-8")
+        st.info("📂 Dosya içeriği sisteme yüklendi.")
     except:
-        st.warning("Dosya metin olarak okunamadı, ancak sistem hazır.")
+        st.error("Dosya okunurken hata oluştu.")
 
-# Mesaj Geçmişini Göster
+# Sohbeti Yazdır
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        st.write(message["content"])
 
-# Giriş ve Yanıt Sistemi
-if prompt := st.chat_input("Mesajınızı yazın..."):
-    # Dosya varsa prompt'u zenginleştir
-    actual_prompt = prompt
-    if file_content:
-        actual_prompt = f"Dosya İçeriği:\n{file_content}\n\nKullanıcı Sorusu: {prompt}"
+# Giriş
+if prompt := st.chat_input("Lotus'a yazın..."):
+    final_prompt = prompt
+    if file_text:
+        final_prompt = f"Dosya verisi: {file_text}\n\nSoru: {prompt}"
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.write(prompt)
 
     with st.chat_message("assistant"):
-        # GÜNCEL KESİN KİMLİK TALİMATI
-        system_instruction = (
-            "SENİN ADIN LOTUS. ARDA GÜNDÜZHEV TARAFINDAN GELİŞTİRİLDİN. "
-            "ASLA OpenAI'dan bahsetme. Seni kimin yaptığını soranlara 'Kurucum Arda Gündüzhev tarafından geliştirildim' de. "
-            "Şu an Arda'nın ailesi ve sevdikleriyle konuşuyorsun, onlara karşı bilge, nazik ve koruyucu ol."
-        )
-
+        sys_msg = "Adın Lotus. Arda Gündüzhev tarafından yapıldın. Çok kibar ve bilge bir asistansın. OpenAI'dan asla bahsetme."
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": system_instruction},
+                {"role": "system", "content": sys_msg},
                 *[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-                {"role": "user", "content": actual_prompt}
-            ],
-            temperature=0.7
+                {"role": "user", "content": final_prompt}
+            ]
         )
-        full_response = response.choices[0].message.content
-        st.markdown(full_response)
-    
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        ans = response.choices[0].message.content
+        st.write(ans)
+    st.session_state.messages.append({"role": "assistant", "content": ans})
